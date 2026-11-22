@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chinese AI Chef | 中华AI主厨</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Serif+SC:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="site-header">
+    <div class="header-container">
+      <div class="brand-logo">
+        <div class="brand-emblem">
+          <!-- Chinese culinary wok & flame SVG icon -->
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" class="wok-icon" aria-hidden="true">
+            <path d="M6 17C6 24.1797 11.3726 30 18 30C24.6274 30 30 24.1797 30 17H6Z" fill="#9B1C1C"/>
+            <path d="M4 16C4 15.4477 4.44772 15 5 15H31C31.5523 15 32 15.4477 32 16C32 16.5523 31.5523 17 31 17H5C4.44772 17 4 16.5523 4 16Z" fill="#771515"/>
+            <path d="M2 13C2 12.4477 2.44772 12 3 12H7C7.55228 12 8 12.4477 8 13C8 13.5523 7.55228 14 7 14H3C2.44772 14 2 13.5523 2 13Z" fill="#5A0E0E"/>
+            <path d="M28 13C28 12.4477 28.4477 12 29 12H33C33.5523 12 34 12.4477 34 13C34 13.5523 33.5523 14 33 14H29C28.4477 14 28 13.5523 28 13Z" fill="#5A0E0E"/>
+            <path d="M14 6C14 6 12 8.5 14 11" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+            <path d="M18 4C18 4 16 7 18 10" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+            <path d="M22 6C22 6 20 8.5 22 11" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-chinese">中华AI主厨</span>
+          <h1 class="brand-title">Chinese AI Chef</h1>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main Navigation">
+        <a href="#recipe-generator" class="nav-link active" id="nav-generator-link">
+          <span class="nav-icon">🍲</span> Recipe Generator
+        </a>
+        <a href="#shopping-list-section" class="nav-link" id="nav-shopping-link">
+          <span class="nav-icon">🛒</span> Shopping List
+          <span class="badge" id="nav-shopping-badge">0</span>
+        </a>
+        <button type="button" class="btn-webhook-status" id="btn-open-settings" title="Webhook Settings">
+          <span class="status-dot status-pending" id="webhook-status-dot"></span>
+          <span class="status-label" id="webhook-status-label">Webhook Setup</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Webhook Notice Banner (Visible when default placeholder is still active) -->
+  <div class="webhook-notice-banner" id="webhook-notice-banner">
+    <div class="notice-content">
+      <span class="notice-icon">⚙️</span>
+      <p class="notice-text">
+        <strong>Backend Connection:</strong> Click <em>Webhook Setup</em> to configure your live n8n webhook URL or edit <code>js/script.js</code>.
+      </p>
+      <button type="button" class="btn-configure-now" id="btn-notice-configure">Configure</button>
+      <button type="button" class="btn-dismiss-notice" id="btn-dismiss-notice" aria-label="Dismiss notice">&times;</button>
+    </div>
+  </div>
+
+  <main class="main-content">
+    
+    <!-- Hero Introduction -->
+    <section class="hero-section">
+      <div class="hero-badge">AI-Powered Culinary Assistant</div>
+      <h2 class="hero-heading">Master Authentic Chinese Cuisine</h2>
+      <p class="hero-subheading">
+        Generate customized Chinese recipes by dish name or from ingredients in your pantry, organize your shopping list, and email your culinary creations.
+      </p>
+    </section>
+
+    <!-- Main Workspace: Generator & Shopping List -->
+    <div class="app-layout">
+      
+      <!-- Primary Column: Recipe Generator & Results -->
+      <div class="primary-column">
+        
+        <!-- Recipe Generator Section -->
+        <section class="generator-card" id="recipe-generator" aria-labelledby="generator-heading">
+          <div class="card-header">
+            <h2 id="generator-heading" class="card-title">Generate a Recipe</h2>
+            <p class="card-subtitle">Choose your preferred recipe generation mode:</p>
+          </div>
+
+          <!-- Mode Switcher Tabs -->
+          <div class="mode-tabs" role="tablist" aria-label="Recipe Generation Modes">
+            <button 
+              type="button" 
+              class="tab-btn active" 
+              id="tab-mode-name" 
+              role="tab" 
+              aria-selected="true" 
+              aria-controls="panel-mode-name"
+            >
+              <span class="tab-icon">🍜</span> Mode A: By Dish Name
+            </button>
+            <button 
+              type="button" 
+              class="tab-btn" 
+              id="tab-mode-pantry" 
+              role="tab" 
+              aria-selected="false" 
+              aria-controls="panel-mode-pantry"
+            >
+              <span class="tab-icon">🥬</span> Mode B: From Pantry Ingredients
+            </button>
+          </div>
+
+          <!-- Mode A Panel: By Dish Name -->
+          <div class="tab-panel active" id="panel-mode-name" role="tabpanel" aria-labelledby="tab-mode-name">
+            <form id="form-by-name" novalidate>
+              <div class="form-group">
+                <label for="dish-name-input" class="form-label">
+                  Chinese Dish or Recipe Name <span class="required">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <span class="field-icon">🥢</span>
+                  <input 
+                    type="text" 
+                    id="dish-name-input" 
+                    class="form-control" 
+                    placeholder="e.g., Kung Pao Chicken, Mapo Tofu, Egg Fried Rice..." 
+                    autocomplete="off"
+                    required
+                  >
+                </div>
+                <div class="form-help-row">
+                  <span class="help-text">Try these favorites:</span>
+                  <div class="chips-row">
+                    <button type="button" class="chip-suggestion" data-dish="Kung Pao Chicken">Kung Pao Chicken</button>
+                    <button type="button" class="chip-suggestion" data-dish="Mapo Tofu">Mapo Tofu</button>
+                    <button type="button" class="chip-suggestion" data-dish="Beef Chow Fun">Beef Chow Fun</button>
+                    <button type="button" class="chip-suggestion" data-dish="Sweet and Sour Pork">Sweet and Sour Pork</button>
+                    <button type="button" class="chip-suggestion" data-dish="Wonton Soup">Wonton Soup</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group-inline">
+                <div class="form-group servings-group">
+                  <label for="servings-name" class="form-label">Number of Servings</label>
+                  <div class="servings-stepper">
+                    <button type="button" class="stepper-btn" id="btn-decrease-servings-name" aria-label="Decrease servings">-</button>
+                    <input 
+                      type="number" 
+                      id="servings-name" 
+                      class="form-control servings-input" 
+                      value="2" 
+                      min="1" 
+                      max="12"
+                      required
+                    >
+                    <button type="button" class="stepper-btn" id="btn-increase-servings-name" aria-label="Increase servings">+</button>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary btn-generate" id="btn-generate-name">
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                    <span class="btn-text">🍳 Generate Recipe</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Mode B Panel: From Available Ingredients -->
+          <div class="tab-panel" id="panel-mode-pantry" role="tabpanel" aria-labelledby="tab-mode-pantry">
+            <form id="form-by-pantry" novalidate>
+              <div class="form-group">
+                <label for="pantry-ingredient-input" class="form-label">
+                  Add Available Ingredients <span class="required">*</span>
+                </label>
+                <div class="ingredient-input-row">
+                  <div class="input-with-icon flex-grow">
+                    <span class="field-icon">🧄</span>
+                    <input 
+                      type="text" 
+                      id="pantry-ingredient-input" 
+                      class="form-control" 
+                      placeholder="e.g., chicken, onion, garlic, soy sauce..." 
+                      autocomplete="off"
+                    >
+                  </div>
+                  <button type="button" class="btn btn-secondary" id="btn-add-pantry-ingredient">
+                    + Add Ingredient
+                  </button>
+                </div>
+
+                <!-- Common Chinese Pantry Staples -->
+                <div class="form-help-row">
+                  <span class="help-text">Quick add staples:</span>
+                  <div class="chips-row">
+                    <button type="button" class="chip-pantry" data-item="Chicken">Chicken</button>
+                    <button type="button" class="chip-pantry" data-item="Garlic">Garlic</button>
+                    <button type="button" class="chip-pantry" data-item="Ginger">Ginger</button>
+                    <button type="button" class="chip-pantry" data-item="Green Onion">Green Onion</button>
+                    <button type="button" class="chip-pantry" data-item="Soy Sauce">Soy Sauce</button>
+                    <button type="button" class="chip-pantry" data-item="Tofu">Tofu</button>
+                    <button type="button" class="chip-pantry" data-item="Eggs">Eggs</button>
+                    <button type="button" class="chip-pantry" data-item="Bok Choy">Bok Choy</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Added Ingredients Tag Container -->
+              <div class="form-group">
+                <div class="tag-list-header">
+                  <span class="form-label">Ingredients to Cook With (<span id="ingredient-count">0</span>):</span>
+                  <button type="button" class="btn-text-link" id="btn-clear-all-ingredients">Clear All</button>
+                </div>
+                <div class="tags-container" id="pantry-tags-container" role="list" aria-label="Selected ingredients">
+                  <p class="empty-tags-hint" id="empty-tags-hint">No ingredients added yet. Type an ingredient above or click quick-add staples.</p>
+                </div>
+              </div>
+
+              <div class="form-group-inline">
+                <div class="form-group servings-group">
+                  <label for="servings-pantry" class="form-label">Number of Servings</label>
+                  <div class="servings-stepper">
+                    <button type="button" class="stepper-btn" id="btn-decrease-servings-pantry" aria-label="Decrease servings">-</button>
+                    <input 
+                      type="number" 
+                      id="servings-pantry" 
+                      class="form-control servings-input" 
+                      value="2" 
+                      min="1" 
+                      max="12"
+                      required
+                    >
+                    <button type="button" class="stepper-btn" id="btn-increase-servings-pantry" aria-label="Increase servings">+</button>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary btn-generate" id="btn-generate-pantry">
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                    <span class="btn-text">🍳 Generate Recipe</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- Recipe Results Area -->
+        <section class="results-container" id="recipe-results-area" aria-live="polite">
+          
+          <!-- Empty State -->
+          <div class="state-card empty-state" id="recipe-empty-state">
+            <div class="state-icon">🏮</div>
+            <h3 class="state-title">No Recipe Generated Yet</h3>
+            <p class="state-desc">
+              Select a dish name or pick ingredients from your pantry above and click <strong>Generate Recipe</strong> to create an authentic Chinese culinary delight.
+            </p>
+          </div>
+
+          <!-- Loading State -->
+          <div class="state-card loading-state hidden" id="recipe-loading-state">
+            <div class="wok-loader">
+              <div class="steam-bubble steam-1"></div>
+              <div class="steam-bubble steam-2"></div>
+              <div class="steam-bubble steam-3"></div>
+              <div class="pan-graphic">🍳</div>
+            </div>
+            <h3 class="state-title">Chef is Wok-Tossing Your Recipe...</h3>
+            <p class="state-desc">Consulting traditional cooking techniques and flavor balances.</p>
+          </div>
+
+          <!-- Error State -->
+          <div class="state-card error-state hidden" id="recipe-error-state">
+            <div class="state-icon">⚠️</div>
+            <h3 class="state-title" id="recipe-error-title">Recipe Generation Failed</h3>
+            <p class="state-desc" id="recipe-error-message">Unable to communicate with the n8n backend.</p>
+            <button type="button" class="btn btn-secondary" id="btn-retry-recipe">Try Again</button>
+          </div>
+
+          <!-- Active Recipe Card -->
+          <article class="recipe-card hidden" id="recipe-content-card">
+            
+            <!-- Recipe Header & Badges -->
+            <header class="recipe-header">
+              <div class="recipe-title-wrapper">
+                <span class="recipe-tag" id="recipe-cuisine-tag">Authentic Chinese</span>
+                <h2 class="recipe-title" id="recipe-display-title">Dish Title</h2>
+                <p class="recipe-desc" id="recipe-display-desc"></p>
+              </div>
+
+              <!-- Quick Meta Info -->
+              <div class="recipe-meta-badges">
+                <div class="meta-badge">
+                  <span class="meta-icon">👥</span>
+                  <span class="meta-text"><strong id="recipe-display-servings">2</strong> Servings</span>
+                </div>
+                <div class="meta-badge">
+                  <span class="meta-icon">🔥</span>
+                  <span class="meta-text" id="recipe-display-mode">By Dish Name</span>
+                </div>
+              </div>
+            </header>
+
+            <!-- Quick Action Buttons -->
+            <div class="recipe-toolbar">
+              <button type="button" class="toolbar-btn" id="btn-add-all-to-shopping" title="Add all ingredients to shopping list">
+                <span class="btn-icon">🛒</span> Add Ingredients to Shopping List
+              </button>
+              <button type="button" class="toolbar-btn" id="btn-copy-recipe" title="Copy recipe to clipboard">
+                <span class="btn-icon">📋</span> Copy Recipe
+              </button>
+              <a href="#email-recipe-box" class="toolbar-btn">
+                <span class="btn-icon">📧</span> Email Recipe
+              </a>
+              <a href="#rating-box" class="toolbar-btn">
+                <span class="btn-icon">⭐</span> Rate Dish
+              </a>
+            </div>
+
+            <!-- Two-Column Recipe Content -->
+            <div class="recipe-grid">
+              
+              <!-- Ingredients List Column -->
+              <div class="recipe-column ingredients-column">
+                <div class="section-title-row">
+                  <h3 class="column-title"><span class="icon">🥢</span> Ingredients</h3>
+                  <span class="count-tag" id="ingredients-count-tag">0 items</span>
+                </div>
+                <ul class="recipe-ingredients-list" id="recipe-ingredients-list">
+                  <!-- Dynamically populated -->
+                </ul>
+              </div>
+
+              <!-- Cooking Steps Column -->
+              <div class="recipe-column steps-column">
+                <div class="section-title-row">
+                  <h3 class="column-title"><span class="icon">🔥</span> Cooking Steps</h3>
+                  <span class="count-tag" id="steps-count-tag">0 steps</span>
+                </div>
+                <ol class="recipe-steps-list" id="recipe-steps-list">
+                  <!-- Dynamically populated -->
+                </ol>
+              </div>
+            </div>
+
+            <!-- Cooking Tips & Secrets (if present) -->
+            <div class="recipe-extra-card tips-card hidden" id="recipe-tips-card">
+              <h4 class="extra-heading"><span class="icon">💡</span> Chef's Secret Tips</h4>
+              <div class="extra-content" id="recipe-tips-content"></div>
+            </div>
+
+            <!-- Serving Suggestions (if present) -->
+            <div class="recipe-extra-card serving-card hidden" id="recipe-serving-card">
+              <h4 class="extra-heading"><span class="icon">🍚</span> Serving Suggestions & Pairings</h4>
+              <div class="extra-content" id="recipe-serving-content"></div>
+            </div>
+
+            <!-- Raw/Unformatted text fallback container (if n8n returns unparseable text) -->
+            <div class="recipe-raw-fallback hidden" id="recipe-raw-fallback">
+              <h4 class="extra-heading">Recipe Details</h4>
+              <div class="raw-content" id="recipe-raw-content"></div>
+            </div>
+
+            <!-- Action Section 1: Email Recipe (Section 5.5) -->
+            <section class="recipe-action-box email-action-box" id="email-recipe-box" aria-labelledby="email-recipe-heading">
+              <h3 id="email-recipe-heading" class="action-box-title">
+                <span class="icon">📧</span> Email This Recipe
+              </h3>
+              <p class="action-box-desc">
+                Send a complete copy of this recipe and its cooking steps directly to your inbox.
+              </p>
+              <form id="form-email-recipe" class="inline-action-form" novalidate>
+                <div class="input-with-icon flex-grow">
+                  <span class="field-icon">✉️</span>
+                  <input 
+                    type="email" 
+                    id="email-recipe-input" 
+                    class="form-control" 
+                    placeholder="Enter your email address (e.g. chef@example.com)" 
+                    required
+                  >
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-submit-email-recipe">
+                  <span class="btn-spinner" aria-hidden="true"></span>
+                  <span class="btn-text">Email Recipe</span>
+                </button>
+              </form>
+              <div class="action-feedback hidden" id="email-recipe-feedback" role="alert"></div>
+            </section>
+
+            <!-- Action Section 2: Rate Recipe (Section 5.6) -->
+            <section class="recipe-action-box rating-action-box" id="rating-box" aria-labelledby="rating-heading">
+              <h3 id="rating-heading" class="action-box-title">
+                <span class="icon">⭐</span> Rate This Recipe
+              </h3>
+              <p class="action-box-desc">
+                How did this dish turn out? Share your rating and optional feedback with Chef AI.
+              </p>
+              
+              <form id="form-rate-recipe" novalidate>
+                <!-- 5-Star Rating Control -->
+                <div class="star-rating-wrapper">
+                  <label class="form-label">Your Rating: <span id="rating-text-label" class="rating-value-label">Select stars</span></label>
+                  <div class="star-rating-control" id="star-rating-control" role="radiogroup" aria-label="Rate 1 to 5 stars">
+                    <button type="button" class="star-btn" data-value="1" role="radio" aria-checked="false" aria-label="1 star">★</button>
+                    <button type="button" class="star-btn" data-value="2" role="radio" aria-checked="false" aria-label="2 stars">★</button>
+                    <button type="button" class="star-btn" data-value="3" role="radio" aria-checked="false" aria-label="3 stars">★</button>
+                    <button type="button" class="star-btn" data-value="4" role="radio" aria-checked="false" aria-label="4 stars">★</button>
+                    <button type="button" class="star-btn" data-value="5" role="radio" aria-checked="false" aria-label="5 stars">★</button>
+                  </div>
+                </div>
+
+                <!-- Comment / Feedback Field -->
+                <div class="form-group">
+                  <label for="rating-comment" class="form-label">
+                    Comments or Adjustments <span class="optional-tag">(Optional)</span>
+                  </label>
+                  <textarea 
+                    id="rating-comment" 
+                    class="form-control rating-textarea" 
+                    rows="3" 
+                    placeholder="e.g., Added extra Sichuan peppercorns for authentic numbing heat! Very easy to prepare."
+                  ></textarea>
+                </div>
+
+                <div class="rating-submit-row">
+                  <button type="submit" class="btn btn-primary" id="btn-submit-rating">
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                    <span class="btn-text">Submit Rating</span>
+                  </button>
+                </div>
+              </form>
+              <div class="action-feedback hidden" id="rating-feedback" role="alert"></div>
+            </section>
+
+          </article>
+        </section>
+
+      </div>
+
+      <!-- Secondary Column: Shopping List (Section 5.4) -->
+      <aside class="secondary-column">
+        <section class="shopping-card" id="shopping-list-section" aria-labelledby="shopping-list-heading">
+          <div class="card-header">
+            <div class="header-left">
+              <h2 id="shopping-list-heading" class="card-title">
+                <span class="icon">🛒</span> Shopping List
+              </h2>
+              <span class="count-badge" id="shopping-items-count">0 items</span>
+            </div>
+            <button type="button" class="btn-text-danger" id="btn-clear-shopping-list" title="Clear all items">
+              Clear All
+            </button>
+          </div>
+
+          <!-- Add Item Form -->
+          <form id="form-add-shopping-item" class="shopping-add-form" novalidate>
+            <div class="form-group-item-name">
+              <label for="shopping-item-name" class="form-label sr-only">Item Name</label>
+              <input 
+                type="text" 
+                id="shopping-item-name" 
+                class="form-control" 
+                placeholder="Item name (e.g. Shaoxing wine)" 
+                required
+              >
+            </div>
+            <div class="form-row-qty-add">
+              <div class="qty-field">
+                <label for="shopping-item-qty" class="form-label sr-only">Quantity</label>
+                <input 
+                  type="text" 
+                  id="shopping-item-qty" 
+                  class="form-control" 
+                  placeholder="Qty (e.g. 500g, 2 tbsp)"
+                >
+              </div>
+              <button type="submit" class="btn btn-primary btn-add-item" id="btn-add-item">
+                + Add
+              </button>
+            </div>
+          </form>
+
+          <!-- Shopping List Items Container -->
+          <div class="shopping-items-container">
+            <ul class="shopping-list-ul" id="shopping-list-ul" aria-label="Shopping list items">
+              <!-- Dynamically populated items -->
+            </ul>
+            
+            <div class="shopping-empty-hint" id="shopping-empty-hint">
+              <span class="empty-icon">📝</span>
+              <p>Your shopping list is empty.</p>
+              <span class="empty-subtext">Add ingredients above or click "Add Ingredients to Shopping List" on any recipe.</span>
+            </div>
+          </div>
+
+          <!-- Shopping List Summary / Completed Counter -->
+          <div class="shopping-summary-bar" id="shopping-summary-bar">
+            <span id="shopping-completed-status">0 of 0 completed</span>
+            <button type="button" class="btn-text-link" id="btn-clear-completed">Remove completed</button>
+          </div>
+
+          <!-- Email Shopping List (Section 5.4) -->
+          <div class="email-shopping-card">
+            <h3 class="email-shopping-title">
+              <span class="icon">✉️</span> Email Shopping List
+            </h3>
+            <p class="email-shopping-desc">Receive your complete grocery list with quantities via email.</p>
+            <form id="form-email-shopping" novalidate>
+              <div class="form-group">
+                <input 
+                  type="email" 
+                  id="shopping-email-input" 
+                  class="form-control" 
+                  placeholder="Enter email for shopping list" 
+                  required
+                >
+              </div>
+              <button type="submit" class="btn btn-secondary w-full" id="btn-submit-email-shopping">
+                <span class="btn-spinner" aria-hidden="true"></span>
+                <span class="btn-text">Email Shopping List</span>
+              </button>
+            </form>
+            <div class="action-feedback hidden" id="email-shopping-feedback" role="alert"></div>
+          </div>
+
+        </section>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Settings / Webhook Configuration Modal -->
+  <div class="modal-backdrop hidden" id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-settings-title" class="modal-title">
+          <span>⚙️</span> n8n Webhook Configuration
+        </h3>
+        <button type="button" class="btn-close-modal" id="btn-close-settings" aria-label="Close settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Configure the n8n webhook URL for the Chinese AI Chef workflow. This value is also set in <code>js/script.js</code> as <code>N8N_WEBHOOK_URL</code>.
+        </p>
+
+        <div class="form-group">
+          <label for="webhook-url-input" class="form-label">n8n Webhook Endpoint URL</label>
+          <input 
+            type="url" 
+            id="webhook-url-input" 
+            class="form-control" 
+            placeholder="https://your-n8n-instance.com/webhook/chinese-chef-ai"
+          >
+          <span class="help-text">Supported actions: <code>generate_recipe</code>, <code>email_shopping_list</code>, <code>email_recipe</code>, <code>rate_recipe</code>.</span>
+        </div>
+
+        <div class="modal-info-box">
+          <strong>ℹ️ Quick Notes:</strong>
+          <ul>
+            <li>Requests are sent as <code>POST</code> with JSON payload matching the n8n routing spec.</li>
+            <li>Make sure your n8n workflow has its Webhook node activated or set to Listen for Test Events.</li>
+            <li>If testing locally, ensure CORS headers are allowed (n8n Webhook response node includes <code>Access-Control-Allow-Origin: *</code>).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-reset-webhook">Reset to Default</button>
+        <button type="button" class="btn btn-primary" id="btn-save-webhook">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container" aria-live="assertive"></div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <p class="footer-text">
+        <strong>Chinese AI Chef</strong> — Built with HTML5, CSS3 &amp; Vanilla JavaScript. Connected to n8n AI Workflow.
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
